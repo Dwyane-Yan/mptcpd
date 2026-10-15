@@ -18,15 +18,6 @@ jobs:
     - name: make
       run: make -j$(nproc)
     - name: make check
-      run: make check-code-coverage \
-             CODE_COVERAGE_OUTPUT_FILE=lcov.info \
-             CODE_COVERAGE_LCOV_OPTIONS="--no-external --exclude */tests/*"
+      run: make check || { cat tests/test-suite.log; exit 1; }
     - name: sudo make check
-      run: sudo make check-code-coverage \
-             CODE_COVERAGE_OUTPUT_FILE=lcov-sudo.info \
-             CODE_COVERAGE_LCOV_OPTIONS="--no-external --exclude */tests/*"
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        files: ./lcov.info ./lcov-sudo.info
+      run: sudo make check || { cat tests/test-suite.log; exit 1; }

@@ -18,6 +18,7 @@ pm_fail() { echo "FAIL: $*"; PM_RET=1; }
 pm_skip() { echo "SKIP: $*"; exit "${PM_SKIP}"; }
 
 pm_check_prereqs() {
+	echo "kernel: $(uname -r), ss: $(ss --version 2>&1)"
 	[ -d /proc/sys/net/mptcp ] || pm_skip "no MPTCP kernel"
 	[ "$(id -u)" = 0 ] || pm_skip "must run as root"
 	[ -f /proc/sys/net/mptcp/pm_type ] || pm_skip "no pm_type sysctl"
@@ -106,6 +107,19 @@ wait_mptcp_endpoints() {
 	return 1
 }
 
+pm_dump_state() {
+	local ns="${1}"
+
+	echo "--- ${ns} state ---"
+	uname -r
+	ip -net "${ns}" mptcp endpoint show
+	ip -net "${ns}" mptcp limits
+	ip netns exec "${ns}" ss -Mit 2>/dev/null
+	ip netns exec "${ns}" ss -Htn state established
+	ip netns exec "${ns}" nstat -az 2>/dev/null | grep MPTcp
+	echo "---"
+}
+
 wait_mptcp_subflows() {
 	local ns="${1}"
 	local nr="${2}"
@@ -122,6 +136,7 @@ wait_mptcp_subflows() {
 	done
 
 	echo "timed out waiting for ${nr} subflows in ${ns}"
+	pm_dump_state "${ns}"
 	return 1
 }
 
