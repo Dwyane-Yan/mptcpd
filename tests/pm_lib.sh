@@ -122,13 +122,18 @@ pm_dump_state() {
 
 wait_mptcp_subflows() {
 	local ns="${1}"
-	local nr="${2}"
+	local port="${2}"
+	local nr="${3}"
+	local hex
 	local i
+
+	hex="$(printf '%04X' "${port}")"
 
 	SUBFLOWS=0
 	for i in $(seq 50); do
-		SUBFLOWS="$(ip netns exec "${ns}" ss -Mit 2>/dev/null \
-			    | grep -oE 'subflows:[0-9]+' | head -1 | cut -d: -f2)"
+		SUBFLOWS=$(ip netns exec "${ns}" awk -v p="${hex}" \
+			'$4 == "01" && $2 ~ ":"p"$" { n++ }
+			END { print n+0 }' /proc/net/tcp*)
 		if [ "${SUBFLOWS:-0}" -ge "${nr}" ]; then
 			return 0
 		fi

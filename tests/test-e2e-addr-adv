@@ -35,7 +35,7 @@ pm_test_addr_adv() {
 
 	pm_do_conn "0.0.0.0" "10.0.1.1" "5001"
 
-	if wait_mptcp_subflows "${PM_NS1}" 2; then
+	if wait_mptcp_subflows "${PM_NS1}" "5001" 2; then
 		pm_pass "mptcp connection has ${SUBFLOWS} subflows (>=2)"
 	else
 		pm_fail "expected >=2 subflows, got ${SUBFLOWS:-0}"
