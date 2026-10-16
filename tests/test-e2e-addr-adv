@@ -39,8 +39,23 @@ pm_test_addr_adv() {
 		pm_pass "mptcp connection has ${SUBFLOWS} subflows (>=2)"
 	else
 		pm_fail "expected >=2 subflows, got ${SUBFLOWS:-0}"
-		pm_dump_state "${PM_NS2}"
 	fi
+
+	# --- CI_debug temporary probes: why does ss -M not show the msk? ---
+	echo "=== probe: kernel/config ==="
+	uname -r
+	grep MPTCP /boot/config-"$(uname -r)" 2>/dev/null \
+		|| zcat /proc/config.gz 2>/dev/null | grep MPTCP
+	echo "=== probe: mptcp diag module ==="
+	ls /lib/modules/"$(uname -r)"/kernel/net/mptcp/ 2>/dev/null \
+		|| echo "no /lib/modules mptcp dir"
+	lsmod | grep mptcp || echo "mptcp_diag not loaded"
+	echo "=== probe: ss -M before modprobe ==="
+	ip netns exec "${PM_NS1}" ss -H -M 2>&1 | head -3
+	echo "=== probe: modprobe mptcp_diag ==="
+	modprobe mptcp_diag 2>&1; echo "modprobe rc=$?"
+	echo "=== probe: ss -Mit after modprobe ==="
+	ip netns exec "${PM_NS1}" ss -Mit 2>&1 | head -8
 }
 
 pm_check_prereqs
