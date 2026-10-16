@@ -21,3 +21,6 @@ jobs:
       run: make check || { cat tests/test-suite.log; exit 1; }
     - name: sudo make check
       run: sudo make check || { cat tests/test-suite.log; exit 1; }
+    - name: dump per-test log
+      if: always()
+      run: cat tests/test-e2e-addr-adv.log
